@@ -1,13 +1,12 @@
 class Project
 
-  attr_accessor :name, :config, :test_result, :build_result
+  attr_accessor :name, :build_number, :config, :test_result, :build_result
 
   def add_plugins(plugins)
     @plugins = plugins
   end
 
   def update_attributes(attrs)
-    @build_number = attrs['build_number'] ? attrs['build_number'] : 0
     @name = attrs['name'] ? attrs['name'] : "My Project"
     @config = attrs
     @test_without_change = true
@@ -24,6 +23,36 @@ class Project
 
   def workspace_path
     "#{WORKSPACE_DIR}/#{self.workspace_name}"
+  end
+
+  def data_file_path
+    "#{DATA_DIR}/#{self.workspace_name}.json"
+  end
+
+  def save_data_to_file
+    b = {}
+    b['build_number'] = @build_number
+    b['test'] = @test_result
+    b['build'] = @build_result
+    @data['build_number'] = @build_number
+    @data['name'] = @name
+    @data['build_results'] << b
+    File.open(data_file_path, 'w') {|f| f.write(@data.to_json) }
+  end
+
+  def load_data_from_file
+    if File.exist? data_file_path
+      contents = File.open(data_file_path, 'rb') { |f| f.read }
+      @data = JSON.parse(contents)
+    end
+
+    if @data == nil
+      @data = {}
+      @data['build_number'] = 0
+      @data['build_results'] = []
+    end
+
+    @build_number = @data['build_number'] + 1
   end
 
   def test_and_build
@@ -49,25 +78,26 @@ class Project
       else
         puts "   + TESTS FAILED"
       end
+      save_data_to_file
     end
   end
 
   def test
     puts " + testing #{@name}"
-    #success = false
-    #Dir.chdir(workspace_path) do
-      #before_test
-      #@plugins.each do |plugin|
-        #if plugin.test?
-          #@test_result = plugin.test(self)
-        #end
-      #end
-      #after_test
-    #end
-    #if @test_result
-      #success = @test_result[:success]
-    #end
-    true
+    success = false
+    Dir.chdir(workspace_path) do
+      before_test
+      @plugins.each do |plugin|
+        if plugin.test?
+          @test_result = plugin.test(self)
+        end
+      end
+      after_test
+    end
+    if @test_result
+      success = @test_result[:success]
+    end
+    success
   end
 
   def before_test
@@ -114,6 +144,7 @@ class Project
 
   def setup
     puts " + setting up #{@name}"
+    load_data_from_file
     setup_workspace_dir
     setup_repo
   end
@@ -142,28 +173,28 @@ class Project
   def remote_has_changes
     changed = false
     puts " + checking remote for changes"
-    #Dir.chdir(workspace_path) do
-      #@plugins.each do |plugin|
-        #pres = plugin.has_changes(self)
-        #if pres != nil
-          #changed = pres
-          #break
-        #end
-      #end
-    #end
+    Dir.chdir(workspace_path) do
+      @plugins.each do |plugin|
+        pres = plugin.has_changes(self)
+        if pres != nil
+          changed = pres
+          break
+        end
+      end
+    end
     changed
   end
 
   def udpate_from_remote
     puts " + updating from remote"
-    #Dir.chdir(workspace_path) do
-      #@plugins.each do |plugin|
-        #pres = plugin.update_from_remote(self)
-        #if pres != nil
-          #break
-        #end
-      #end
-    #end
+    Dir.chdir(workspace_path) do
+      @plugins.each do |plugin|
+        pres = plugin.update_from_remote(self)
+        if pres != nil
+          break
+        end
+      end
+    end
   end
 
 end

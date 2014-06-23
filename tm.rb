@@ -11,6 +11,7 @@ BASE_DIR = File.dirname(__FILE__)
 WORKSPACE_DIR = "#{BASE_DIR}/workspace"
 PROJECTS_DIR = "#{BASE_DIR}/projects"
 PLUGINS_DIR = "#{BASE_DIR}/plugins"
+DATA_DIR = "#{BASE_DIR}/data"
 GIT = "/usr/bin/git"
 
 class TraceMake

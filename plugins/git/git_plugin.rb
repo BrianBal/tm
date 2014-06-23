@@ -28,6 +28,13 @@ class GitPlugin < Plugin
     `#{GIT} clone #{bo['repo']} .`
   end
 
+  def git_cmd
+    if @@git == nil
+      @@git = `which git`
+    end
+    @@git
+  end
+
 end
 
 TraceMake.register_plugin(GitPlugin.new)

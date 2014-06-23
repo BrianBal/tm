@@ -37,12 +37,13 @@ class IosPlugin < Plugin
     # TODO: auto configure
     # TODO: merge options
     bo = project.get_plugin_configuration("ios")
-    bo['configuration'] = 'AdHoc'
+    bo['configuration'] = 'Release'
     bo['sdk'] = 'iphoneos'
-    identity = "iPhone Distribution: AlpineReplay, Inc. (HKYVBK7K6X)"
+    identity = "iPhone Developer: Brian Bal (TAC9SB8BK4)"
     profile = "/Users/bal/Projects/trace_make/projects/ARTestAppsAdHoc_2014_06_20.mobileprovision"
-    app_file="build/release/trace.app"
-    ipa_file="build/release/trace.ipa"
+    profile_uuid = "10EE1E49-8174-4004-B6F3-0042EAF4B3EB"
+    app_file=File.absolute_path("./build/Release-iphoneos/trace.app")
+    ipa_file=File.absolute_path("./build/Release-iphoneos/trace.ipa")
 
     cmd = ""
     cmd += "xcodebuild "
@@ -51,11 +52,14 @@ class IosPlugin < Plugin
         cmd += "-#{key} \"#{val}\" "
       end
     end
-    cmd += "build CONFIGURATION_BUILD_DIR=\"./build/release/\""
-    puts cmd
+    cmd += "build "
+    cmd += "CONFIGURATION_BUILD_DIR=\"#{File.absolute_path("./build/Release-iphoneos/")}\" "
+    #cmd += "CONFIGURATION_TEMP_DIR=\"./build/release/\" "
+    #cmd += "CODE_SIGN_IDENTITY=\"#{identity}\" "
+    #cmd += "PROVISIONING_PROFILE=\"#{profile_uuid}\""
     results = `#{cmd}`
     results = "\n"
-    puts "xcrun -sdk iphoneos PackageApplication -v #{app_file} -o #{ipa_file} --sign \"#{identity}\" --embed \"#{profile}\""
+    #puts "xcrun -sdk iphoneos PackageApplication -v #{app_file} -o #{ipa_file} --sign \"#{identity}\" --embed \"#{profile}\""
     results += `xcrun -sdk iphoneos PackageApplication -v #{app_file} -o #{ipa_file} --sign "#{identity}" --embed "#{profile}"`
     success = $?.to_i == 0
     { :success => success, :output => results, :results =>[ipa_file]}

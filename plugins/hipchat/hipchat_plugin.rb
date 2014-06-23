@@ -31,19 +31,19 @@ class HipchatPlugin < Plugin
   end
 
   def success_message_for_test(project)
-    ":) Tests passed for #{project.name}"
+    ":) Tests passed for build ##{project.build_number} #{project.name}"
   end
 
   def fail_message_for_test(project)
-    ":( Tests failed for #{project.name}"
+    ":( Tests FAILED for build ##{project.build_number} #{project.name}"
   end
 
   def success_message_for_build(project)
-    ":) Tests passed for #{project.name}"
+    ":) Build ##{project.build_number} ready for #{project.name}"
   end
 
   def fail_message_for_build(project)
-    ":) Tests passed for #{project.name}"
+    ":) Build ##{project.build_number} FAILED for #{project.name}"
   end
 
 end
