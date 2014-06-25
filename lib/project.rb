@@ -33,7 +33,7 @@ class Project
     "#{DATA_DIR}/#{self.workspace_name}_#{@build_number}_test.log"
   end
 
-  def data_file_path
+  def build_log_file_path
     "#{DATA_DIR}/#{self.workspace_name}_#{@build_number}_build.log"
   end
 
@@ -53,7 +53,7 @@ class Project
     end
     to = @test_result[:output]
     if to
-      File.open(data_file_path, 'w') {|f| f.write(to) }
+      File.open(test_log_file_path, 'w') {|f| f.write(to) }
     end
   end
 
