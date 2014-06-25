@@ -5,33 +5,34 @@ class HipchatPlugin < Plugin
   end
 
   def after_test(project)
-    # TODO: get token from config
-    # TODO: get message from config
-    #client = HipChat::Client.new("0a81342c9ed63232ddf8099b6065e1")
+    opts = get_options(project)
+    room = opts['room']
+    client = HipChat::Client.new(opts['token'])
     if project.test_result[:success]
-      #client['code_commits'].send('TraceMake', success_message_for_test(project))
-      puts success_message_for_test(project)
+      client[room].send('TraceMake', success_message_for_test(project))
     else
-      #client['code_commits'].send('TraceMake', fail_message_for_test(project))
-      puts fail_message_for_test(project)
+      client[room].send('TraceMake', fail_message_for_test(project))
     end
   end
 
   def after_build(project)
-    # TODO: get token from config
-    # TODO: get message from config
-    #client = HipChat::Client.new("0a81342c9ed63232ddf8099b6065e1")
+    opts = get_options(project)
+    room = opts['room']
+    client = HipChat::Client.new(opts['token'])
     if project.build_result[:success]
-      #client['code_commits'].send('TraceMake', success_message_for_build(project))
-      puts success_message_for_build(project)
+      client[room].send('TraceMake', success_message_for_build(project))
     else
-      #client['code_commits'].send('TraceMake', fail_message_for_build(project))
-      puts fail_message_for_build(project)
+      client[room].send('TraceMake', fail_message_for_build(project))
     end
   end
 
+  def get_options(project)
+    project.get_plugin_configuration("hipchat")
+  end
+
   def success_message_for_test(project)
-    ":) Tests passed for build ##{project.build_number} #{project.name}"
+    cc = project.test_result[:code_coverage]
+    ":) Tests passed for build ##{project.build_number} #{project.name}  #{cc}% code coverage"
   end
 
   def fail_message_for_test(project)
@@ -43,7 +44,7 @@ class HipchatPlugin < Plugin
   end
 
   def fail_message_for_build(project)
-    ":) Build ##{project.build_number} FAILED for #{project.name}"
+    ">:( Build ##{project.build_number} FAILED for #{project.name}"
   end
 
 end

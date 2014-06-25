@@ -29,15 +29,32 @@ class Project
     "#{DATA_DIR}/#{self.workspace_name}.json"
   end
 
+  def test_log_file_path
+    "#{DATA_DIR}/#{self.workspace_name}_#{@build_number}_test.log"
+  end
+
+  def data_file_path
+    "#{DATA_DIR}/#{self.workspace_name}_#{@build_number}_build.log"
+  end
+
   def save_data_to_file
     b = {}
     b['build_number'] = @build_number
-    b['test'] = @test_result
-    b['build'] = @build_result
+    b['test'] = @test_result[:success]
+    b['build'] = @build_result[:success]
     @data['build_number'] = @build_number
     @data['name'] = @name
     @data['build_results'] << b
     File.open(data_file_path, 'w') {|f| f.write(@data.to_json) }
+
+    bo = @build_result[:output]
+    if bo
+      File.open(build_log_file_path, 'w') {|f| f.write(bo) }
+    end
+    to = @test_result[:output]
+    if to
+      File.open(data_file_path, 'w') {|f| f.write(to) }
+    end
   end
 
   def load_data_from_file

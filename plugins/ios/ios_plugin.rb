@@ -52,7 +52,7 @@ class IosPlugin < Plugin
         cmd += "-#{key} \"#{val}\" "
       end
     end
-    cmd += "build "
+    cmd += "clean build "
     cmd += "CONFIGURATION_BUILD_DIR=\"#{File.absolute_path("./build/Release-iphoneos/")}\" "
     #cmd += "CONFIGURATION_TEMP_DIR=\"./build/release/\" "
     #cmd += "CODE_SIGN_IDENTITY=\"#{identity}\" "
