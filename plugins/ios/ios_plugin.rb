@@ -26,7 +26,7 @@ class IosPlugin < Plugin
     results = `#{cmd}`
     success = $?.to_i == 0
     code_coverage = get_code_coverage(project, success)
-    { success:success, output:results, code_coverage:code_coverage}
+    { success:success, output:results, code_coverage:code_coverage }
   end
 
   def build?
