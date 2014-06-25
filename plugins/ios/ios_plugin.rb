@@ -39,8 +39,8 @@ class IosPlugin < Plugin
     bo = project.get_plugin_configuration("ios")
     bo['configuration'] = 'Release'
     bo['sdk'] = 'iphoneos'
-    identity = "iPhone Developer: Brian Bal (TAC9SB8BK4)"
-    profile = "/Users/bal/Projects/trace_make/projects/ARTestAppsAdHoc_2014_06_20.mobileprovision"
+    identity = "iPhone Distribution: AlpineReplay, Inc. (HKYVBK7K6X)"
+    profile = "/Users/bal/ActiveReplay/trace_make/projects/ARTestAppsAdHoc_2014_06_20.mobileprovision"
     profile_uuid = "10EE1E49-8174-4004-B6F3-0042EAF4B3EB"
     app_file=File.absolute_path("./build/Release-iphoneos/trace.app")
     ipa_file=File.absolute_path("./build/Release-iphoneos/trace.ipa")

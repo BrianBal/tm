@@ -22,3 +22,5 @@ class TestFlightPlugin < Plugin
   end
 
 end
+
+TraceMake.register_plugin(TestFlightPlugin.new)
