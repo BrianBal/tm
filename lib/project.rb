@@ -9,7 +9,7 @@ class Project
   def update_attributes(attrs)
     @name = attrs['name'] ? attrs['name'] : "My Project"
     @config = attrs
-    @test_without_change = true
+    @test_without_change = false
     @build_without_change = false
   end
 
