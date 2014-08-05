@@ -9,7 +9,7 @@ class Project
   def update_attributes(attrs)
     @name = attrs['name'] ? attrs['name'] : "My Project"
     @config = attrs
-    @test_without_change = false
+    @test_without_change = true
     @build_without_change = false
   end
 
@@ -38,6 +38,12 @@ class Project
   end
 
   def save_data_to_file
+    if @test_result == nil
+      @test_result = {:success => false}
+    end
+    if @build_result == nil
+      @build_result = {:success => false}
+    end
     b = {}
     b['build_number'] = @build_number
     b['test'] = @test_result[:success]
@@ -47,13 +53,17 @@ class Project
     @data['build_results'] << b
     File.open(data_file_path, 'w') {|f| f.write(@data.to_json) }
 
-    bo = @build_result[:output]
-    if bo
-      File.open(build_log_file_path, 'w') {|f| f.write(bo) }
+    if @build_result[:output]
+      bo = @build_result[:output]
+      if bo
+        File.open(build_log_file_path, 'w') {|f| f.write(bo) }
+      end
     end
-    to = @test_result[:output]
-    if to
-      File.open(test_log_file_path, 'w') {|f| f.write(to) }
+    if @test_result[:output]
+      to = @test_result[:output]
+      if to
+        File.open(test_log_file_path, 'w') {|f| f.write(to) }
+      end
     end
   end
 

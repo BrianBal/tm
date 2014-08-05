@@ -10,7 +10,9 @@ class AndroidPlugin < Plugin
     code_coverage = 0
     bo = android_options(project)
     Dir.chdir(bo['root_dir']) do
-      results = `#{bo['gradle']} #{bo['project']}:test`
+      results = `#{bo['gradle']} #{bo['project']}:connectedAndroidTest`
+      puts "#{bo['gradle']} #{bo['project']}:connectedAndroidTest"
+      puts results
       success = $?.to_i == 0
       code_coverage = 0
     end
@@ -31,11 +33,14 @@ class AndroidPlugin < Plugin
 
   def android_options(project)
     opts = {}
-    opts['gradle'] = "./gralew"
+    opts['gradle'] = "./gradlew"
     opts['project'] = project.name
     opts['root_dir'] = "./"
-    project.get_plugin_configuration("android").merge(opts)
+    opts = opts.merge(project.get_plugin_configuration("android"))
+    p opts
+    opts
   end
 
 end
 
+TraceMake.register_plugin(AndroidPlugin.new)
