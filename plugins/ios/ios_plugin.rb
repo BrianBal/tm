@@ -54,11 +54,11 @@ class IosPlugin < Plugin
     end
     cmd += "clean build "
     cmd += "CONFIGURATION_BUILD_DIR=\"#{File.absolute_path("./build/Release-iphoneos/")}\" "
-    #cmd += "CONFIGURATION_TEMP_DIR=\"./build/release/\" "
-    #cmd += "CODE_SIGN_IDENTITY=\"#{identity}\" "
-    #cmd += "PROVISIONING_PROFILE=\"#{profile_uuid}\""
+    cmd += "CONFIGURATION_TEMP_DIR=\"./build/release/\" "
+    cmd += "CODE_SIGN_IDENTITY=\"#{identity}\" "
+    cmd += "PROVISIONING_PROFILE=\"#{profile_uuid}\""
     results = `#{cmd}`
-    results = "\n"
+    results += "\n"
     #puts "xcrun -sdk iphoneos PackageApplication -v #{app_file} -o #{ipa_file} --sign \"#{identity}\" --embed \"#{profile}\""
     results += `xcrun -sdk iphoneos PackageApplication -v #{app_file} -o #{ipa_file} --sign "#{identity}" --embed "#{profile}"`
     success = $?.to_i == 0

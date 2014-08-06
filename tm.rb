@@ -3,6 +3,7 @@ require 'bundler'
 require 'fileutils'
 require 'json'
 require 'hipchat'
+require 'clockwork'
 
 require './lib/project.rb'
 require './lib/plugin.rb'
@@ -17,21 +18,12 @@ GIT = "/usr/bin/git"
 class TraceMake
 
   @@plugins = {}
-  @@projects = []
 
   def self.register_plugin(plugin)
     @@plugins[plugin.plugin_tag] = plugin
   end
 
-  def self.start
-    project_files = Dir.glob(PROJECTS_DIR + '/*.json')
-    project_files.each do |project_file|
-      contents = File.open(project_file, 'rb') { |f| f.read }
-      project = Project.new
-      project.update_attributes(JSON.parse(contents))
-      @@projects << project
-    end
-
+  def self.init
     plugin_dirs = Dir.glob(PLUGINS_DIR + "/*")
     plugin_dirs.each do |plugin_dir|
       rb_files = Dir.glob(plugin_dir + "/*.rb")
@@ -39,8 +31,20 @@ class TraceMake
         require rb_file
       end
     end
+  end
 
-    @@projects.each do |project|
+  def self.start
+    puts "TraceMake starting to make stuff"
+    projects = []
+    project_files = Dir.glob(PROJECTS_DIR + '/*.json')
+    project_files.each do |project_file|
+      contents = File.open(project_file, 'rb') { |f| f.read }
+      project = Project.new
+      project.update_attributes(JSON.parse(contents))
+      projects << project
+    end
+
+    projects.each do |project|
       plugins_for_project = []
       project.config.each do |pr_key, pr_value|
         @@plugins.each do |pl_key, pl_value|
@@ -49,12 +53,19 @@ class TraceMake
           end
         end
       end
-      puts "plugins_for_project: #{plugins_for_project}"
       project.add_plugins(plugins_for_project)
       project.test_and_build
     end
+    puts "TraceMake done making stuff for now"
   end
 
 end
 
-TraceMake.start
+
+TraceMake.init
+
+run = true
+while run do
+  TraceMake.start
+  sleep(900)
+end
