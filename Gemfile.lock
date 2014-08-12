@@ -10,6 +10,8 @@ GEM
     clockwork (0.7.5)
       activesupport
       tzinfo
+    cocoapods (0.5.1)
+      xcodeproj (~> 0.1.0)
     hipchat (1.2.0)
       httparty
     httparty (0.13.1)
@@ -22,10 +24,12 @@ GEM
     thread_safe (0.3.4)
     tzinfo (1.2.1)
       thread_safe (~> 0.1)
+    xcodeproj (0.1.0)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
   clockwork
+  cocoapods
   hipchat

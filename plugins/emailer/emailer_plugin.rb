@@ -35,9 +35,9 @@ class EmailerPlugin < Plugin
     ">:( Build ##{project.build_number} FAILED for #{project.name}"
   end
 
-  "to": ["brian@alpinereplay.com"],
-    "smtp_server": "smpt.gmail.com",
-    "port": "587",
-    "user_name": "brian@alpinereplay.com",
-    "password": "wrgTxG8KsRmA"
+  #"to": ["brian@alpinereplay.com"],
+    #"smtp_server": "smpt.gmail.com",
+    #"port": "587",
+    #"user_name": "brian@alpinereplay.com",
+    #"password": "wrgTxG8KsRmA"
 end

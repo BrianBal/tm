@@ -20,9 +20,11 @@ class GitPlugin < Plugin
 
     local = nil
     remote = nil
+    `#{git_cmd} checkout .`
     `#{git_cmd} fetch`
     local  = `#{git_cmd} rev-parse HEAD`
     remote = `#{git_cmd} rev-parse origin/#{bo['branch']}`
+    puts "local: #{local}  remote: #{remote}"
     local != remote
   end
 

@@ -11,21 +11,28 @@ class IosPlugin < Plugin
   def test(project)
     # TODO: auto configure
     # TODO: merge options
+    success = true
+    results = ""
+    code_coverage = 0
     bo = project.get_plugin_configuration("ios")
-    cmd = ""
-    bo['pre_test_commands'].each do |pbc|
-      cmd += "#{pbc} && "
-    end
-    cmd += "xcodebuild "
-    bo.each do |key, val|
-      if key != "pre_test_commands"
+    if bo['test'] == true || bo['test'] == nil
+      cmd = ""
+      bo['pre_test_commands'].each do |pbc|
+        cmd += "#{pbc} && "
+      end
+      cmd += "xcodebuild "
+      bo["build_options"].each do |key, val|
         cmd += "-#{key} \"#{val}\" "
       end
+      cmd += "clean test CONFIGURATION_TEMP_DIR=\"./build/test/\""
+      results = `#{cmd}`
+      success = $?.to_i == 0
+      code_coverage = get_code_coverage(project, success)
+    else
+      success = true
+      results = ""
+      code_coverage = 0
     end
-    cmd += "clean test CONFIGURATION_TEMP_DIR=\"./build/test/\""
-    results = `#{cmd}`
-    success = $?.to_i == 0
-    code_coverage = get_code_coverage(project, success)
     { success:success, output:results, code_coverage:code_coverage }
   end
 
@@ -37,17 +44,17 @@ class IosPlugin < Plugin
     # TODO: auto configure
     # TODO: merge options
     bo = project.get_plugin_configuration("ios")
-    bo['configuration'] = 'Release'
-    bo['sdk'] = 'iphoneos'
-    identity = "iPhone Distribution: AlpineReplay, Inc. (HKYVBK7K6X)"
-    profile = "/Users/bal/ActiveReplay/trace_make/projects/ARTestAppsAdHoc_2014_06_20.mobileprovision"
-    profile_uuid = "10EE1E49-8174-4004-B6F3-0042EAF4B3EB"
-    app_file=File.absolute_path("./build/Release-iphoneos/trace.app")
-    ipa_file=File.absolute_path("./build/Release-iphoneos/trace.ipa")
+    bo['build_options']['configuration'] = 'Release'
+    bo['build_options']['sdk'] = 'iphoneos'
+    identity = bo['identity']
+    profile = bo['profile']
+    profile_uuid = bo['profile_uuid']
+    app_file=File.absolute_path("./build/Release-iphoneos/#{bo['product_name']}.app")
+    ipa_file=File.absolute_path("./build/Release-iphoneos/#{bo['product_name']}.ipa")
 
     cmd = ""
     cmd += "xcodebuild "
-    bo.each do |key, val|
+    bo["build_options"].each do |key, val|
       if key != "pre_test_commands" && key != "destination"
         cmd += "-#{key} \"#{val}\" "
       end
@@ -67,7 +74,7 @@ class IosPlugin < Plugin
 
   def get_code_coverage(project, success)
     bo = project.get_plugin_configuration("ios")
-    scheme = bo['scheme']
+    scheme = bo['build_options']['scheme']
     per_covered = 0
     if success
       coverages = []
