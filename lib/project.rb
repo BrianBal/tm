@@ -1,227 +1,206 @@
 class Project
 
-  attr_accessor :name, :build_number, :config, :test_result, :build_result
+  attr_accessor :name, :meta, :config, :test_result, :build_result, :workspace
 
-  def add_plugins(plugins)
-    @plugins = plugins
+  def setup(jsonProject)
+    # setup project properties
+    @name = jsonProject[:project][:name]
+    @config = jsonProject
+    @plugins = []
+    load_meta_data()
+
+    # make sure directory structure is setup for project
+    create_dir(project_source_path)
+    create_dir(project_data_path)
+    create_dir(project_builds_path)
   end
 
-  def update_attributes(attrs)
-    @name = attrs['name'] ? attrs['name'] : "My Project"
-    @config = attrs
-    @test_without_change = false
-    @build_without_change = false
-  end
-
-  def get_plugin_configuration(plugin_name)
-    @config[plugin_name]
+  def register_plugins(plugins)
+    plugins.each do |p|
+      @plugins << p
+    end
   end
 
   def workspace_name
     @name.downcase.gsub(" ", "_")
   end
 
-  def workspace_path
-    "#{WORKSPACE_DIR}/#{self.workspace_name}"
+  def project_workspace_path
+    "#{@workspace}/#{self.workspace_name}"
   end
 
-  def data_file_path
-    "#{DATA_DIR}/#{self.workspace_name}.json"
+  def project_source_path
+    "#{@workspace}/#{self.workspace_name}/src"
+  end
+
+  def project_data_path
+    "#{@workspace}/#{self.workspace_name}/data"
+  end
+
+  def project_meta_data_file_path
+    "#{@workspace}/#{self.workspace_name}/data/meta.json"
+  end
+
+  def project_builds_path
+    "#{@workspace}/#{self.workspace_name}/builds"
+  end
+
+  def project_build_path
+    "#{@workspace}/#{self.workspace_name}/builds/#{build_number()}"
   end
 
   def test_log_file_path
-    "#{DATA_DIR}/#{self.workspace_name}_#{@build_number}_test.log"
+    "#{project_build_path}/test.log"
   end
 
   def build_log_file_path
-    "#{DATA_DIR}/#{self.workspace_name}_#{@build_number}_build.log"
+    "#{project_build_path}/build.log"
   end
 
-  def save_data_to_file
-    if @test_result == nil
-      @test_result = {:success => false}
+  def create_dir(path)
+    if ! File.directory?(path)
+      FileUtils.mkdir_p(path)
+      puts " + creating directory #{path}"
     end
-    if @build_result == nil
-      @build_result = {:success => false}
-    end
-    b = {}
-    b['build_number'] = @build_number
-    b['test'] = @test_result[:success]
-    b['build'] = @build_result[:success]
-    @data['build_number'] = @build_number
-    @data['name'] = @name
-    @data['build_results'] << b
-    File.open(data_file_path, 'w') {|f| f.write(@data.to_json) }
+  end
 
-    if @build_result[:output]
-      bo = @build_result[:output]
-      if bo
-        File.open(build_log_file_path, 'w') {|f| f.write(bo) }
+  def load_meta_data
+    begin
+      contents = File.open(project_meta_data_file_path, 'rb') { |f| f.read }
+      @meta = JSON.parse(contents, :symbolize_names => true)
+    rescue
+      puts "failed to load meta data file"
+      @meta = {}
+    end
+  end
+
+  def save_meta_data
+    File.open(project_meta_data_file_path, 'w') {|f| f.write(@meta.to_json) }
+  end
+
+  def config_for_plugin(plugin_name)
+    @config[plugin_name.to_sym]
+  end   
+
+  def meta_data_for_plugin(plugin_name)
+    m = @meta[plugin_name.to_sym]
+    if m == nil
+      m = {}
+    end
+    m
+  end
+
+  def set_meta_data_for_plugin(plugin_name, data)
+    @meta[plugin_name.to_sym] = data
+  end
+
+  def build_number
+    bm = @meta[:build_number]
+    if bm == nil
+      bm = 0
+    end
+    bm
+  end
+
+  def set_build_number(bm)
+    @meta[:build_number] = bm
+  end
+
+
+
+  # SCM
+
+  def find_changes
+    changes = []
+
+    Dir.chdir(project_source_path) do
+      @plugins.each do |plugin|
+
+        if plugin.scm?
+          plugin.scm_changes(self).each do | change |
+            changes << change
+          end
+        end
+
       end
     end
-    if @test_result[:output]
-      to = @test_result[:output]
-      if to
-        File.open(test_log_file_path, 'w') {|f| f.write(to) }
+
+    changes
+  end
+
+  def update_to_change(change)
+    Dir.chdir(project_source_path) do
+      @plugins.each do |plugin|
+
+        if plugin.scm?
+          plugin.scm_update_to_change(self, change)
+          break
+        end
+
       end
     end
   end
 
-  def load_data_from_file
-    if File.exist? data_file_path
-      contents = File.open(data_file_path, 'rb') { |f| f.read }
-      @data = JSON.parse(contents)
-    end
 
-    if @data == nil
-      @data = {}
-      @data['build_number'] = 0
-      @data['build_results'] = []
-    end
 
-    @build_number = @data['build_number'] + 1
-  end
+
+
+
+
 
   def test_and_build
-    setup
-    has_changes = remote_has_changes
-    if has_changes
-      puts " + remote has changes"
-      udpate_from_remote
+    puts "\n + #{@name}"
+    changes = find_changes()
+    changes.each do |change|
+      
+      # update the build number
+      set_build_number(build_number + 1)
+
+      # create build directory to save results
+      puts "build: #{project_build_path}"
+      create_dir(project_build_path)
+
+      # update source to change
+      update_to_change(change)
+
+      # test then build
+      test(change)
+      build(change)
+
     end
 
-    should_test = @test_without_change
-    if has_changes
-      should_test = true
-    end
-    if should_test
-      if test
-        puts "   + tests passed"
-        if build
-          puts "   + build complete"
-        else
-          puts "   + BUILD FAILED"
-        end
-      else
-        puts "   + TESTS FAILED"
-      end
-      save_data_to_file
-    end
+    save_meta_data
   end
 
-  def test
-    puts " + testing #{@name}"
+  def test(change)
+    
+  end
+
+  def build(change)
+    puts "   - building #{change[:branch]}/#{change[:commit]}"
     success = false
-    Dir.chdir(workspace_path) do
-      before_test
-      @plugins.each do |plugin|
-        if plugin.test?
-          @test_result = plugin.test(self)
-        end
-      end
-      after_test
-    end
-    if @test_result
-      success = @test_result[:success]
-    end
-    success
-  end
-
-  def before_test
-    @plugins.each do |plugin|
-      plugin.before_test(self)
-    end
-  end
-
-  def after_test
-    @plugins.each do |plugin|
-      plugin.after_test(self)
-    end
-  end
-
-  def build
-    puts " + building #{@name}"
-    success = false
-    Dir.chdir(workspace_path) do
-      before_build
+    Dir.chdir(project_source_path) do
       @plugins.each do |plugin|
         if plugin.build?
           @build_result = plugin.build(self)
         end
       end
-      after_build
     end
     if @build_result
       success = @build_result[:success]
+
+      # save log file
+      puts "build_log_file_path: #{build_log_file_path}"
+      File.open(build_log_file_path, 'w') {|f| f.write(@build_result[:output]) }
+
+      # save build results
+      @build_result[:results].each do |result|
+        puts "result: #{result}"
+        puts "to: #{project_build_path}#{File.basename(result)}"
+        FileUtils.mv(result, "#{project_build_path}/#{File.basename(result)}")
+      end
     end
     success
-  end
-
-  def before_build
-    @plugins.each do |plugin|
-      plugin.before_build(self)
-    end
-  end
-
-  def after_build
-    @plugins.each do |plugin|
-      plugin.after_build(self)
-    end
-  end
-
-  def setup
-    puts " + setting up #{@name}"
-    load_data_from_file
-    setup_workspace_dir
-    setup_repo
-  end
-
-  def setup_workspace_dir
-    if ! Dir.exist? workspace_path
-      puts "   + creating workspace"
-      Dir.mkdir(workspace_path)
-    end
-  end
-
-  def setup_repo
-    if ! File.exist?("#{workspace_path}/.git")
-      puts "   + cloning repo"
-      Dir.chdir(workspace_path) do
-        @plugins.each do |plugin|
-          pres = plugin.checkout_from_remote(self)
-          if pres != nil
-            break
-          end
-        end
-      end
-    end
-  end
-
-  def remote_has_changes
-    changed = false
-    puts " + checking remote for changes"
-    Dir.chdir(workspace_path) do
-      @plugins.each do |plugin|
-        pres = plugin.has_changes(self)
-        if pres != nil
-          changed = pres
-          break
-        end
-      end
-    end
-    changed
-  end
-
-  def udpate_from_remote
-    puts " + updating from remote"
-    Dir.chdir(workspace_path) do
-      @plugins.each do |plugin|
-        pres = plugin.update_from_remote(self)
-        if pres != nil
-          break
-        end
-      end
-    end
   end
 
 end

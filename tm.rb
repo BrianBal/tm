@@ -20,7 +20,7 @@ class TraceMake
   @@plugins = {}
 
   def self.register_plugin(plugin)
-    @@plugins[plugin.plugin_tag] = plugin
+    @@plugins[plugin.plugin_tag.to_sym] = plugin
   end
 
   def self.init
@@ -34,13 +34,14 @@ class TraceMake
   end
 
   def self.start
-    puts "TraceMake starting to make stuff"
+    puts "\nTraceMake starting to make stuff"
     projects = []
     project_files = Dir.glob(PROJECTS_DIR + '/*.json')
     project_files.each do |project_file|
       contents = File.open(project_file, 'rb') { |f| f.read }
       project = Project.new
-      project.update_attributes(JSON.parse(contents))
+      project.workspace = WORKSPACE_DIR
+      project.setup(JSON.parse(contents, :symbolize_names => true))
       projects << project
     end
 
@@ -53,10 +54,10 @@ class TraceMake
           end
         end
       end
-      project.add_plugins(plugins_for_project)
+      project.register_plugins(plugins_for_project)
       project.test_and_build
     end
-    puts "TraceMake done making stuff for now"
+    puts "\n\n"
   end
 
 end
@@ -64,8 +65,10 @@ end
 
 TraceMake.init
 
-run = true
-while run do
-  TraceMake.start
-  sleep(900)
-end
+#run = true
+#while run do
+#  TraceMake.start
+#  sleep(900)
+#end
+
+TraceMake.start

@@ -20,11 +20,14 @@ class Plugin
     false
   end
 
+
+  # SCM
+  
   def scm?
     false
   end
 
-  def has_changes(project)
+  def scm_changes(project)
     nil
   end
 
@@ -35,6 +38,12 @@ class Plugin
   def checkout_from_remote(project)
     nil
   end
+
+
+
+
+
+
 
   def before_test(project)
   end
