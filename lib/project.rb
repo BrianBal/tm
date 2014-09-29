@@ -163,9 +163,23 @@ class Project
       # update source to change
       update_to_change(change)
 
-      # test then build
+      # test
+      @plugins.each do |plugin|
+        plugin.before_test(self)
+      end
       test(change)
+      @plugins.each do |plugin|
+        plugin.after_test(self)
+      end
+
+      # build
+      @plugins.each do |plugin|
+        plugin.before_build(self)
+      end
       build(change)
+      @plugins.each do |plugin|
+        plugin.after_build(self)
+      end
 
     end
 

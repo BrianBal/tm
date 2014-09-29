@@ -44,7 +44,6 @@ class Plugin
 
 
 
-
   def before_test(project)
   end
 
