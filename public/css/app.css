@@ -235,7 +235,11 @@ p {
   margin: 1.25em 0;
 }
 
-
+@media only screen and (max-width:739px) { 
+  .hero h1 {
+    font-size: 1.5em;
+  }
+}
 
 
 

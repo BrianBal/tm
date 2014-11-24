@@ -5,6 +5,13 @@ require './tm'
 
 Bundler.setup
 
+configure do
+
+  set :bind, '192.168.1.48'
+  set :port, '3000'
+
+end
+
 get '/' do
   projects = []
   project_files = Dir.glob(PROJECTS_DIR + '/*.json')
