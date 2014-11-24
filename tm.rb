@@ -63,7 +63,7 @@ class TraceMake
 end
 
 
-TraceMake.init
+#TraceMake.init
 
 #run = true
 #while run do
@@ -71,4 +71,4 @@ TraceMake.init
 #  sleep(900)
 #end
 
-TraceMake.start
+#TraceMake.start

@@ -1,0 +1,17 @@
+!!! 5
+%html{ :lang => "en"}
+  %head
+    %title Trace Make
+
+    %meta{ :"http-equiv" => "Content-Type", :content => "text/html; charset=UTF-8" }
+
+    %meta{ :content => "", :name => "description" }
+    %meta{ :content => "", :name => "author" }
+    %meta{ :content => "3 days", :name => "revisit-after" }
+
+    %link{ :href => "/css/app.css", :rel => "stylesheet" }
+
+    :javascript
+      $(document).foundation();
+  %body
+    = yield

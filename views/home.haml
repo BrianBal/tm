@@ -1,0 +1,20 @@
+
+.hero
+  %h1 trace_make
+
+.container
+
+  .col4
+    - projects.each_with_index do |project, i|
+      - if i % 3 == 0
+        = haml :_small_project, :locals => { :project => project }
+
+  .col4
+    - projects.each_with_index do |project, i|
+      - if i % 3 ==  1
+        = haml :_small_project, :locals => { :project => project }
+
+  .col4
+    - projects.each_with_index do |project, i|
+      - if i % 3 ==  2
+        = haml :_small_project, :locals => { :project => project }
